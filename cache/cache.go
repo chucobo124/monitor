@@ -1,32 +1,43 @@
 package cache
 
 import (
-//"time"
+	"time"
 )
 
 type ChartCache struct {
-	Value     int64
-	TimeStamp int64
+	Value     int
+	TimeStamp int
 }
 
 type ChartCaches struct {
 	Caches []ChartCache
 }
 
-var ttl = 1000
-
 func InitChartCache() *ChartCaches {
 	chartCaches := make([]ChartCache, 0)
-	//timer := time.NewTimer(time.Second)
-	//go func() {
-	//	<-timer.C
-	//	println("Timer expired")
-	//}()
-
-	return &ChartCaches{
+	ticker := time.NewTicker(time.Second)
+	c := &ChartCaches{
 		Caches: chartCaches,
 	}
 
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				c.ttl()
+			}
+		}
+	}()
+
+	return c
+}
+
+func (c *ChartCaches) ttl() bool {
+	cacheCount := len(c.Caches)
+	if cacheCount > 100 {
+		c.Caches = c.Caches[10:cacheCount]
+	}
+	return true
 }
 
 func (c *ChartCaches) Charts() *ChartCaches {

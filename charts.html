@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
+	</head>
+	<body>
+		<canvas id="chart" width="400" height="400"></canvas>
+	<body>
+<script>
+	fetch("http://localhost:8080/charts").then((response) => {
+		stream = response.body.getReader()
+		return new ReadableStream({
+			start(controller) {
+				return pump();
+				function pump() {
+					return stream.read().then(function processData({ done, value }) {
+						console.log(value)
+						drawLineChart(value)
+						controller.enqueue(value);
+						return pump(); 
+					})
+				}
+			}
+		})
+	});
+
+	function drawLineChart(value){
+		xAixs = []
+		for (i = 0; i < value.length; i++) {
+			xAixs.push(i)
+		}
+		var ctx = document.getElementById('chart').getContext('2d');
+		var myLineChart = new Chart(ctx, {
+		    type: 'line',
+	            data: {
+			label: 'votage',
+			datasets: [{
+			   label: "Votage",
+			   borderColor: 'rgb(255, 99, 132)',
+			   data: value,
+			}],
+		    },
+		    options: {
+			    scales: {
+				yAxes: [{
+				    ticks: {
+					max: 1000,
+					min: 0,
+					stepSize: 100
+				    }
+				}],
+			    }
+			},
+		});
+	}
+</script>
+</html>
